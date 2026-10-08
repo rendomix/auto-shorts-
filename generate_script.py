@@ -9,7 +9,22 @@ CFG = types.GenerateContentConfig(response_mime_type="application/json")
 def ask(prompt):
     r = client.models.generate_content(model=MODEL, contents=prompt, config=CFG)
     return json.loads(r.text)
+import time
 
+MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
+
+def ask(prompt):
+    last = None
+    for attempt in range(4):
+        for m in MODELS:
+            try:
+                r = client.models.generate_content(model=m, contents=prompt, config=CFG)
+                return json.loads(r.text)
+            except Exception as e:
+                last = e
+                print("Gagal di", m, ":", str(e)[:80])
+        time.sleep(10 * (attempt + 1))
+    raise last
 WRITE_RULES = (
     "Kamu penulis naskah video edukasi pendek (35-45 detik, sekitar 90-110 kata) "
     "dalam bahasa Indonesia gaya ngobrol. ATURAN: "
